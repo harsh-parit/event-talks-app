@@ -46,6 +46,7 @@ const modalSubmitBtn = document.getElementById('modal-submit-btn');
 document.addEventListener('DOMContentLoaded', () => {
     fetchReleaseNotes();
     setupEventListeners();
+    startAutoSync(); // Begin real-time background synchronization
 });
 
 // Setup Event Listeners
@@ -235,6 +236,47 @@ function updateLastUpdatedTime() {
     } catch (e) {
         console.error('Error in live time indicator:', e);
         lastUpdatedBadge.querySelector('.text').textContent = 'Live Feed Active';
+    }
+}
+
+// Background Real-Time Synchronization Lifecycle
+let autoSyncInterval = null;
+
+function startAutoSync() {
+    if (autoSyncInterval) clearInterval(autoSyncInterval);
+    // Poll the backend every 60 seconds to check for new updates
+    autoSyncInterval = setInterval(fetchReleaseNotesSilent, 60000);
+}
+
+async function fetchReleaseNotesSilent() {
+    try {
+        const response = await fetch('/api/release-notes');
+        if (!response.ok) throw new Error('API pull failed');
+        
+        const data = await response.json();
+        if (data.error) return;
+
+        const newUpdates = data.updates || [];
+        
+        // Compare data signatures using arrays of update IDs to see if feed changed
+        const currentSignature = JSON.stringify(releaseNotes.map(n => n.id));
+        const newSignature = JSON.stringify(newUpdates.map(n => n.id));
+
+        if (currentSignature !== newSignature) {
+            // New updates detected on Google servers
+            releaseNotes = newUpdates;
+            lastRefreshedTime = new Date();
+            remoteFeedUpdatedString = data.last_updated || '';
+            calculateStatistics();
+            applyFiltersAndRender();
+            showToast('New BigQuery updates synced in real time!', 'success');
+        } else {
+            // Sync current clock reference silently (feed is unchanged)
+            lastRefreshedTime = new Date();
+            updateLastUpdatedTime();
+        }
+    } catch (error) {
+        console.warn('Background auto-sync checking paused:', error);
     }
 }
 
