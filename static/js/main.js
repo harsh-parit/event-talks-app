@@ -217,22 +217,33 @@ function updateLastUpdatedTime() {
             relativeStr = `${Math.floor(diffHour / 24)}d ago`;
         }
 
-        // Format remote Google feed publish timestamp to IST
-        let feedIstString = 'Unknown';
+        // Format remote Google feed publish date (Date only, since hours are placeholder midnight values in the XML)
+        let feedIstDate = 'Unknown';
         if (remoteFeedUpdatedString) {
             const feedDate = new Date(remoteFeedUpdatedString);
             const feedOptions = {
                 timeZone: 'Asia/Kolkata',
                 day: 'numeric',
                 month: 'short',
+                year: 'numeric'
+            };
+            feedIstDate = feedDate.toLocaleDateString('en-IN', feedOptions);
+        }
+
+        // Format Client checked time to IST (synchronized with real internet/system time when check happened)
+        let checkedIstTime = '';
+        if (lastRefreshedTime) {
+            const checkOptions = {
+                timeZone: 'Asia/Kolkata',
                 hour: '2-digit',
                 minute: '2-digit',
+                second: '2-digit',
                 hour12: true
             };
-            feedIstString = feedDate.toLocaleString('en-US', feedOptions) + ' IST';
+            checkedIstTime = lastRefreshedTime.toLocaleTimeString('en-US', checkOptions) + ' IST';
         }
         
-        lastUpdatedBadge.querySelector('.text').textContent = `Feed: ${feedIstString} • Checked: ${relativeStr}`;
+        lastUpdatedBadge.querySelector('.text').textContent = `Feed Date: ${feedIstDate} • Refreshed: ${checkedIstTime} (${relativeStr})`;
     } catch (e) {
         console.error('Error in live time indicator:', e);
         lastUpdatedBadge.querySelector('.text').textContent = 'Live Feed Active';
