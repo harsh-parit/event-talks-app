@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigQuery Release Notes Explorer</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Background glow grids for rich visual aesthetic -->
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
+    
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="logo-wrapper">
+                    <!-- Custom SVG BigQuery-like database logo -->
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2005/svg">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="url(#logo-grad)" stroke-width="2"/>
+                        <path d="M12 6V12L16 14" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="12" cy="12" r="3" fill="url(#logo-grad)" opacity="0.3"/>
+                        <defs>
+                            <linearGradient id="logo-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#00f2fe"/>
+                                <stop offset="1" stop-color="#4facfe"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>BigQuery Release Notes</h1>
+                    <p class="subtitle">Real-time developer update tracker & social share tool</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="last-updated-badge" id="last-updated-badge">
+                    <span class="pulse-indicator"></span>
+                    <span class="text">Checking for updates...</span>
+                </div>
+                <button class="refresh-btn" id="refresh-btn" aria-label="Refresh notes">
+                    <!-- Refresh SVG Icon -->
+                    <svg class="icon-refresh" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2005/svg">
+                        <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C14.8273 3 17.3375 4.3015 19 6.34238M21 3V8M21 8H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>Refresh</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Overview Row -->
+        <section class="stats-overview" id="stats-overview">
+            <div class="stat-card" data-category="all">
+                <div class="stat-value" id="stat-total">-</div>
+                <div class="stat-label">Total Updates</div>
+            </div>
+            <div class="stat-card" data-category="feature">
+                <div class="stat-value" id="stat-features">-</div>
+                <div class="stat-label">Features</div>
+            </div>
+            <div class="stat-card" data-category="issue">
+                <div class="stat-value" id="stat-issues">-</div>
+                <div class="stat-label">Issues</div>
+            </div>
+            <div class="stat-card" data-category="deprecation">
+                <div class="stat-value" id="stat-deprecations">-</div>
+                <div class="stat-label">Deprecations</div>
+            </div>
+        </section>
+
+        <!-- Main Workspace -->
+        <div class="app-main-layout">
+            <!-- Sidebar controls -->
+            <aside class="sidebar-panel">
+                <div class="panel-section">
+                    <h3 class="section-title">Search & Filter</h3>
+                    
+                    <!-- Search Input -->
+                    <div class="search-wrapper">
+                        <svg class="search-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2005/svg">
+                            <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <input type="text" id="search-input" placeholder="Search keywords..." aria-label="Search release notes">
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3 class="section-title">Update Type</h3>
+                    <div class="filter-group" id="type-filter-group">
+                        <button class="filter-chip active" data-type="all">All Updates</button>
+                        <button class="filter-chip" data-type="feature">Features</button>
+                        <button class="filter-chip" data-type="issue">Issues</button>
+                        <button class="filter-chip" data-type="deprecation">Deprecations</button>
+                        <button class="filter-chip" data-type="other">Others</button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3 class="section-title">Sorting</h3>
+                    <select id="sort-select" class="sort-dropdown" aria-label="Sort updates">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                    </select>
+                </div>
+            </aside>
+
+            <!-- Content Area -->
+            <main class="content-panel">
+                <div class="results-meta">
+                    <span id="results-count">Showing 0 updates</span>
+                </div>
+
+                <!-- Updates List Container -->
+                <div class="updates-list" id="updates-list">
+                    <!-- Skeleton loaders will go here initially -->
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Twitter Draft Modal (Glassmorphic Modal Overlay) -->
+    <div class="modal-overlay" id="tweet-modal">
+        <div class="modal-content">
+            <button class="modal-close" id="modal-close-btn" aria-label="Close modal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            <div class="modal-header">
+                <div class="modal-header-icon">
+                    <!-- Custom SVG for Twitter/X -->
+                    <svg viewBox="0 0 24 24" fill="currentColor" class="x-logo">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2>Draft Your Tweet</h2>
+                    <p class="modal-subtitle">Customize your update before sharing on X</p>
+                </div>
+            </div>
+            
+            <div class="modal-body">
+                <div class="tweet-card-preview">
+                    <textarea class="tweet-textarea" id="tweet-textarea" rows="6" maxlength="500"></textarea>
+                    
+                    <div class="tweet-meta-row">
+                        <div class="char-count" id="tweet-char-count">
+                            <span id="char-now">0</span>/<span id="char-max">280</span>
+                        </div>
+                        <div class="char-gauge-container">
+                            <div class="char-gauge-bar" id="char-gauge-bar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="warning-box hidden" id="tweet-warning">
+                    <svg class="warning-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    <span>This draft exceeds X's standard 280 character limit! You can trim it above.</span>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modal-cancel-btn">Cancel</button>
+                <button class="btn btn-primary btn-tweet" id="modal-submit-btn">
+                    <svg viewBox="0 0 24 24" fill="currentColor" class="tweet-btn-icon">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                    <span>Post to X</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Main JavaScript Logic -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
