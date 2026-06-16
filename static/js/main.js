@@ -7,6 +7,9 @@ let currentFilters = {
     sort: 'newest'
 };
 let selectedNoteForTweet = null;
+let lastRefreshedTime = null;
+let liveTimeInterval = null;
+let remoteFeedUpdatedString = '';
 
 // DOM Elements
 const refreshBtn = document.getElementById('refresh-btn');
@@ -121,7 +124,9 @@ async function fetchReleaseNotes() {
         }
 
         releaseNotes = data.updates || [];
-        updateLastUpdatedTime(data.last_updated);
+        lastRefreshedTime = new Date();
+        remoteFeedUpdatedString = data.last_updated || '';
+        startLiveTimeIndicator();
         calculateStatistics();
         applyFiltersAndRender();
         
@@ -177,18 +182,58 @@ function showErrorState() {
     `;
 }
 
-// Update Last Updated Badge
-function updateLastUpdatedTime(timeString) {
-    if (!timeString) {
+// Live relative timer lifecycle
+function startLiveTimeIndicator() {
+    if (liveTimeInterval) clearInterval(liveTimeInterval);
+    updateLastUpdatedTime();
+    liveTimeInterval = setInterval(updateLastUpdatedTime, 10000); // refresh relative counter every 10 seconds
+}
+
+// Update Last Refreshed and Google Feed Time in IST
+function updateLastUpdatedTime() {
+    if (!lastRefreshedTime) {
         lastUpdatedBadge.querySelector('.text').textContent = 'Live Feed Active';
         return;
     }
     
     try {
-        const date = new Date(timeString);
-        const formattedDate = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-        lastUpdatedBadge.querySelector('.text').textContent = `Updated: ${formattedDate}`;
+        const now = new Date();
+        const diffMs = now - lastRefreshedTime;
+        const diffSec = Math.floor(diffMs / 1000);
+        const diffMin = Math.floor(diffSec / 60);
+        const diffHour = Math.floor(diffMin / 60);
+
+        let relativeStr = '';
+        if (diffSec < 10) {
+            relativeStr = 'Just now';
+        } else if (diffSec < 60) {
+            relativeStr = `${diffSec}s ago`;
+        } else if (diffMin < 60) {
+            relativeStr = `${diffMin}m ago`;
+        } else if (diffHour < 24) {
+            relativeStr = `${diffHour}h ago`;
+        } else {
+            relativeStr = `${Math.floor(diffHour / 24)}d ago`;
+        }
+
+        // Format remote Google feed publish timestamp to IST
+        let feedIstString = 'Unknown';
+        if (remoteFeedUpdatedString) {
+            const feedDate = new Date(remoteFeedUpdatedString);
+            const feedOptions = {
+                timeZone: 'Asia/Kolkata',
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            };
+            feedIstString = feedDate.toLocaleString('en-US', feedOptions) + ' IST';
+        }
+        
+        lastUpdatedBadge.querySelector('.text').textContent = `Feed: ${feedIstString} • Checked: ${relativeStr}`;
     } catch (e) {
+        console.error('Error in live time indicator:', e);
         lastUpdatedBadge.querySelector('.text').textContent = 'Live Feed Active';
     }
 }
