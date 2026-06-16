@@ -1090,3 +1090,124 @@ body {
     width: 18px;
     height: 18px;
 }
+
+/* ==========================================
+   LIGHT MODE OVERRIDES
+   ========================================== */
+body.light-theme {
+    --bg-primary: #f8fafc;
+    --bg-secondary: #f1f5f9;
+    --glass-bg: rgba(255, 255, 255, 0.65);
+    --glass-border: rgba(15, 23, 42, 0.08);
+    --glass-border-hover: rgba(15, 23, 42, 0.15);
+    --glass-highlight: rgba(15, 23, 42, 0.02);
+    
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    
+    --modal-bg: rgba(255, 255, 255, 0.95);
+    --tweet-preview-bg: rgba(15, 23, 42, 0.03);
+    
+    /* Subtle category background tweaks for light mode readability */
+    --color-feature-bg: rgba(14, 165, 233, 0.1);
+    --color-issue-bg: rgba(244, 63, 94, 0.1);
+    --color-deprecation-bg: rgba(245, 158, 11, 0.1);
+    --color-other-bg: rgba(168, 85, 247, 0.1);
+}
+
+/* Override fixed color variables for light mode */
+body.light-theme #search-input,
+body.light-theme .sort-dropdown,
+body.light-theme .sort-dropdown option,
+body.light-theme .tweet-textarea {
+    color: var(--text-primary);
+}
+
+body.light-theme .modal-content {
+    background: var(--modal-bg);
+}
+
+body.light-theme .tweet-card-preview {
+    background: var(--tweet-preview-bg);
+}
+
+body.light-theme .bg-glow-1 {
+    background: radial-gradient(circle, rgba(14, 165, 233, 0.08) 0%, rgba(248, 250, 252, 0) 70%);
+}
+
+body.light-theme .bg-glow-2 {
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.06) 0%, rgba(248, 250, 252, 0) 70%);
+}
+
+body.light-theme .card-content code {
+    background: rgba(15, 23, 42, 0.05);
+    border-color: rgba(15, 23, 42, 0.08);
+}
+
+body.light-theme .card-content strong {
+    color: var(--text-primary);
+}
+
+body.light-theme .brand-text h1 {
+    background: linear-gradient(135deg, #0f172a 30%, #0284c7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+body.light-theme .stat-card[data-category="all"] .stat-value {
+    color: var(--text-primary);
+}
+
+body.light-theme .filter-chip:hover {
+    background: rgba(15, 23, 42, 0.03);
+}
+
+body.light-theme .card-btn:hover {
+    background: rgba(15, 23, 42, 0.05);
+}
+
+body.light-theme .toast {
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--text-primary);
+}
+
+/* Theme Toggle Button Styling */
+.theme-toggle-btn {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-fast);
+}
+
+.theme-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    border-color: var(--glass-border-hover);
+    transform: scale(1.05);
+}
+
+body.light-theme .theme-toggle-btn:hover {
+    background: rgba(15, 23, 42, 0.05);
+}
+
+.theme-toggle-btn svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.5s ease;
+}
+
+.theme-toggle-btn:active svg {
+    transform: rotate(30deg);
+}
+
+.hidden {
+    display: none !important;
+}

@@ -14,6 +14,7 @@ let remoteFeedUpdatedString = '';
 // DOM Elements
 const refreshBtn = document.getElementById('refresh-btn');
 const exportBtn = document.getElementById('export-btn');
+const themeToggleBtn = document.getElementById('theme-toggle-btn');
 const lastUpdatedBadge = document.getElementById('last-updated-badge');
 const updatesList = document.getElementById('updates-list');
 const searchInput = document.getElementById('search-input');
@@ -47,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchReleaseNotes();
     setupEventListeners();
     startAutoSync(); // Begin real-time background synchronization
+    initializeTheme(); // Restore theme from storage
 });
 
 // Setup Event Listeners
@@ -56,6 +58,9 @@ function setupEventListeners() {
 
     // Export CSV Button
     exportBtn.addEventListener('click', exportToCSV);
+
+    // Theme Toggle Button
+    themeToggleBtn.addEventListener('click', toggleTheme);
 
     // Search Input
     searchInput.addEventListener('input', (e) => {
@@ -620,5 +625,37 @@ function exportToCSV() {
     } catch (err) {
         console.error('CSV Export Error:', err);
         showToast('Failed to export CSV file.', 'error');
+    }
+}
+
+// Light/Dark Theme Lifecycle Functions
+function initializeTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-theme');
+        updateThemeIcons(true);
+    } else {
+        document.body.classList.remove('light-theme');
+        updateThemeIcons(false);
+    }
+}
+
+function toggleTheme() {
+    const isLight = document.body.classList.toggle('light-theme');
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    updateThemeIcons(isLight);
+    showToast(`Swapped to ${isLight ? 'Light' : 'Dark'} mode!`, 'success');
+}
+
+function updateThemeIcons(isLight) {
+    const sunIcon = themeToggleBtn.querySelector('.theme-icon-sun');
+    const moonIcon = themeToggleBtn.querySelector('.theme-icon-moon');
+    
+    if (isLight) {
+        sunIcon.classList.remove('hidden');
+        moonIcon.classList.add('hidden');
+    } else {
+        sunIcon.classList.add('hidden');
+        moonIcon.classList.remove('hidden');
     }
 }
