@@ -10,6 +10,7 @@ let selectedNoteForTweet = null;
 
 // DOM Elements
 const refreshBtn = document.getElementById('refresh-btn');
+const exportBtn = document.getElementById('export-btn');
 const lastUpdatedBadge = document.getElementById('last-updated-badge');
 const updatesList = document.getElementById('updates-list');
 const searchInput = document.getElementById('search-input');
@@ -48,6 +49,9 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupEventListeners() {
     // Refresh Button
     refreshBtn.addEventListener('click', fetchReleaseNotes);
+
+    // Export CSV Button
+    exportBtn.addEventListener('click', exportToCSV);
 
     // Search Input
     searchInput.addEventListener('input', (e) => {
@@ -279,7 +283,7 @@ function renderUpdates() {
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                         </svg>
-                        Copy Text
+                        Copy to Clipboard
                     </button>
                     <button class="card-btn btn-share-tweet" onclick="openTweetModal('${note.id}')">
                         <!-- Custom SVG for Twitter/X -->
@@ -463,4 +467,60 @@ function submitTweet() {
     
     closeTweetModal();
     showToast('Redirected to X!', 'success');
+}
+
+// Client-Side CSV Export Function
+function exportToCSV() {
+    if (filteredNotes.length === 0) {
+        showToast('No updates found to export.', 'error');
+        return;
+    }
+    
+    // CSV Header row
+    const headers = ['ID', 'Date', 'Type', 'Content Text', 'Direct Link'];
+    
+    // Escape values helper
+    const escapeCSV = (val) => {
+        if (val === null || val === undefined) return '';
+        const stringVal = String(val);
+        // Replace double quotes with escaped double quotes
+        const escaped = stringVal.replace(/"/g, '""');
+        return `"${escaped}"`;
+    };
+    
+    // CSV content lines
+    const csvRows = [
+        headers.join(','),
+        ...filteredNotes.map(note => [
+            note.id,
+            note.date,
+            note.type,
+            note.text,
+            note.link
+        ].map(escapeCSV).join(','))
+    ];
+    
+    const csvContent = csvRows.join('\r\n');
+    
+    try {
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        
+        // Dynamic file name with current date
+        const dateStr = new Date().toISOString().split('T')[0];
+        const filename = `bigquery_release_notes_${dateStr}.csv`;
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showToast(`Exported ${filteredNotes.length} updates successfully!`, 'success');
+    } catch (err) {
+        console.error('CSV Export Error:', err);
+        showToast('Failed to export CSV file.', 'error');
+    }
 }
